@@ -2,7 +2,7 @@ import java.io.*;
 import java.util.LinkedList;
 
 public class Trie {
-    private final TrieNode root = new TrieNode(false);
+    private final TrieNode root = new TrieNode(false, 0);
     private final int CASE = 97; // assume always lowercase
 
     /**
@@ -28,7 +28,8 @@ public class Trie {
                 insert(word);
             }
         }
-        
+
+        setDepth();
         search(searching);
     }
 
@@ -45,7 +46,7 @@ public class Trie {
             StringBuilder label = current.edgeLabel[letterIndex];
 
             // while label and word don't reach end AND match
-            while (labelIndex < label.length() && wordIndex < word.length() && label.charAt(labelIndex) == word.charAt(wordIndex)) {
+            while (wordIndex < word.length() && labelIndex < label.length() && label.charAt(labelIndex) == word.charAt(wordIndex)) {
                 wordIndex++;
                 labelIndex++;
             }
@@ -66,14 +67,9 @@ public class Trie {
         } //end outer while
 
         // CASE: add new node for new word
-        //letterIndex = word.charAt(wordIndex) - CASE;
-        if (wordIndex < word.length()) {
-            current.edgeLabel[word.charAt(wordIndex) - CASE] = createSubstring(word, wordIndex);
-            current.children[word.charAt(wordIndex) - CASE] = new TrieNode(true);
-        } else {
-            current.isEnd = true;
-        }
+        addNewNode(current, word, wordIndex);
     }
+
     private void addPrefix(TrieNode current, int letterIndex, StringBuilder cutLabel) {
         TrieNode exists = current.children[letterIndex];
         TrieNode toInsert = new TrieNode(true);
@@ -93,6 +89,15 @@ public class Trie {
         toInsert.children[cutWord.charAt(0) - CASE] = new TrieNode(true);
     }
 
+    private void addNewNode(TrieNode current, String word, int wordIndex) {
+        if (wordIndex < word.length()) {
+            current.edgeLabel[word.charAt(wordIndex) - CASE] = createSubstring(word, wordIndex);
+            current.children[word.charAt(wordIndex) - CASE] = new TrieNode(true);
+        } else {
+            current.isEnd = true;
+        }
+    }
+
     private StringBuilder createSubstring(CharSequence word, int i) {
         StringBuilder outputString = new StringBuilder();
         while (i != word.length()) {
@@ -102,7 +107,51 @@ public class Trie {
         return outputString;
     }
 
+    public void setDepth() {
+        LinkedList<TrieNode> queue = new LinkedList<>();
+        queue.add(root);
+        root.setWord("");
+        while(!queue.isEmpty()) {
+            TrieNode current = queue.poll();
+            for (int i = 0; i < current.children.length; i++) {
+                if (current.children[i] != null) {
+                    String toWrite = current.getWord() + (current.edgeLabel[i]);
+                    current.children[i].setWord(toWrite);
+                    current.children[i].setDepth(current.getDepth() + 1);
+                    queue.add(current.children[i]);
+                }
+            }
+        }
+    }
+
     public void search (String word) {
+        TrieNode current = root;
+        int wordIndex = 0;
+
+        while (wordIndex < word.length() && current.edgeLabel[word.charAt(wordIndex) - CASE] != null) {
+            int letterIndex = word.charAt(wordIndex) - CASE; // index of word in alphabet
+            StringBuilder label = current.edgeLabel[letterIndex];
+            int labelIndex = 0;
+
+            while (labelIndex < label.length() && wordIndex < word.length()) {
+                if(label.charAt(labelIndex) != word.charAt(wordIndex)) {
+                    // if mismatch happens then there is no match
+                    // print nothing to output file
+                    return;
+                }
+                labelIndex++;
+                wordIndex++;
+            }
+
+            // if reach here, then there is something to print to output file
+            if (labelIndex == label.length() && wordIndex <= word.length()) {
+                BFS(current);
+            }
+
+        }
+    }
+
+    private void BFS(TrieNode root) {
 
     }
 
