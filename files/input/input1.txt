@@ -1,4 +1,3 @@
-segment
 seg
 sea
 segmentationfault

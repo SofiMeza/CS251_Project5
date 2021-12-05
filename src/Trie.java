@@ -1,9 +1,12 @@
+import javax.crypto.spec.PSource;
 import java.io.*;
 import java.util.LinkedList;
 
 public class Trie {
     private final TrieNode root = new TrieNode(false, 0);
     private final int CASE = 97; // assume always lowercase
+    private LinkedList<TrieNode> finalList = new LinkedList<>();
+    private String searching;
 
     /**
      *
@@ -19,7 +22,6 @@ public class Trie {
         BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
         String word;
         boolean isFirst = true;
-        String searching = null;
         while ((word = bufferedReader.readLine()) != null) {
             if (isFirst) {
                 searching = word;
@@ -30,7 +32,7 @@ public class Trie {
         }
 
         setDepth();
-        search(searching);
+        //search(searching);
     }
 
     public void insert (String word) {
@@ -144,15 +146,33 @@ public class Trie {
             }
 
             // if reach here, then there is something to print to output file
-            if (labelIndex == label.length() && wordIndex <= word.length()) {
-                BFS(current);
-            }
+            //System.out.println(current.getWord());
+            current = current.children[letterIndex];
+        }
 
+        if (current.getWord().contains(word)) {
+            BFS(current);
         }
     }
 
-    private void BFS(TrieNode root) {
+    private void BFS(TrieNode start) {
+        LinkedList<TrieNode> queue = new LinkedList<>();
+        queue.add(start);
+        while(!queue.isEmpty()) {
+            TrieNode current = queue.poll();
+            for (int i = 0; i < current.children.length; i++) {
+                if (current.children[i] != null) {
+                    queue.add(current.children[i]);
+                }
+            }
+            if (current.getWord() != "" && current.isEnd) {
 
+                finalList.add(current);
+                //System.out.println(current.getWord());
+
+            }
+        }
+        System.out.println();
     }
 
     /**
@@ -164,6 +184,17 @@ public class Trie {
      * @throws Exception
      */
     public void autocomplete (String outputfile) throws Exception{
+        search(searching);
+        File outputFile = new File(outputfile);
+        outputFile.createNewFile();
+        FileWriter fileWriter = new FileWriter(outputFile);
+
+        for (int i = 0; i < finalList.size(); i++) {
+            fileWriter.write(finalList.get(i).getWord() + " " + finalList.get(i).getDepth());
+            fileWriter.write("\n");
+        }
+        fileWriter.close();
+
 
 
     }
@@ -171,5 +202,6 @@ public class Trie {
     public static void main(String[] args) throws Exception {
         Trie trie = new Trie();
         trie.buildTrie("files/input/input1.txt");
+        trie.autocomplete("out.txt");
     }
 }
