@@ -17,25 +17,31 @@ public class Trie {
         // read file
         File inputFile = new File(inputfile);
         BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
-        LinkedList<String> fileWords = new LinkedList<>();
         String word;
+        boolean isFirst = true;
+        String searching = null;
         while ((word = bufferedReader.readLine()) != null) {
-            fileWords.add(word);
-            insert(word);
+            if (isFirst) {
+                searching = word;
+                isFirst = false;
+            } else {
+                insert(word);
+            }
         }
+        
+        search(searching);
     }
 
     public void insert (String word) {
         TrieNode current = root;
         int wordIndex = 0;
-        int letterIndex = word.charAt(wordIndex) - CASE;
 
         // while:
         // CASE: add prefix of existing word
         // CASE: add word with partial match of existing word
-        while (wordIndex < word.length() && current.edgeLabel[letterIndex] != null) {
-            letterIndex = word.charAt(wordIndex) - CASE; // index of word in alphabet
+        while (wordIndex < word.length() && current.edgeLabel[word.charAt(wordIndex) - CASE] != null) {
             int labelIndex = 0;
+            int letterIndex = word.charAt(wordIndex) - CASE; // index of word in alphabet
             StringBuilder label = current.edgeLabel[letterIndex];
 
             // while label and word don't reach end AND match
@@ -47,22 +53,44 @@ public class Trie {
             if (labelIndex == label.length()) { // if entire label matches
                 current = current.children[letterIndex];
             } else { // if partial match between word and label
-                if (wordIndex == word.length()) { // CASE: Add prefix of existing work
+                StringBuilder cutLabel = createSubstring(label, labelIndex);
+                label.setLength(labelIndex);
 
+                if (wordIndex == word.length()) { // CASE: Add prefix of existing word
+                    addPrefix(current, letterIndex, cutLabel);
                 } else { // CASE: add word with partial match of existing word
-
+                    partialMatch(current, word, wordIndex, letterIndex, cutLabel);
                 }
                 return;
             } //end if
         } //end outer while
 
         // CASE: add new node for new word
+        //letterIndex = word.charAt(wordIndex) - CASE;
         if (wordIndex < word.length()) {
-            current.edgeLabel[letterIndex] = createSubstring(word, wordIndex);
-            current.children[letterIndex] = new TrieNode(true);
+            current.edgeLabel[word.charAt(wordIndex) - CASE] = createSubstring(word, wordIndex);
+            current.children[word.charAt(wordIndex) - CASE] = new TrieNode(true);
         } else {
             current.isEnd = true;
         }
+    }
+    private void addPrefix(TrieNode current, int letterIndex, StringBuilder cutLabel) {
+        TrieNode exists = current.children[letterIndex];
+        TrieNode toInsert = new TrieNode(true);
+        current.children[letterIndex] = toInsert;
+        toInsert.children[cutLabel.charAt(0) - CASE] = exists;
+        toInsert.edgeLabel[cutLabel.charAt(0) - CASE] = cutLabel;
+    }
+
+    private void partialMatch(TrieNode current, String word, int wordIndex, int letterIndex, StringBuilder cutLabel) {
+        TrieNode toInsert = new TrieNode(false);
+        StringBuilder cutWord = createSubstring(word, wordIndex);
+        TrieNode x = current.children[letterIndex];
+        current.children[letterIndex] = toInsert;
+        toInsert.edgeLabel[cutLabel.charAt(0) - CASE] = cutLabel;
+        toInsert.children[cutLabel.charAt(0) - CASE] = x;
+        toInsert.edgeLabel[cutWord.charAt(0) - CASE] = cutWord;
+        toInsert.children[cutWord.charAt(0) - CASE] = new TrieNode(true);
     }
 
     private StringBuilder createSubstring(CharSequence word, int i) {
@@ -74,6 +102,10 @@ public class Trie {
         return outputString;
     }
 
+    public void search (String word) {
+
+    }
+
     /**
      *
      * This function is used to traverse the trie and compute the autocomplete wordlist.
@@ -83,6 +115,7 @@ public class Trie {
      * @throws Exception
      */
     public void autocomplete (String outputfile) throws Exception{
+
 
     }
 
